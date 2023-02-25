@@ -9,3 +9,7 @@
 /tmp.png
 /.ipynb_checkpoints/2SupervisedLearning-checkpoint.ipynb
 /tmp
+.aux
+.toc
+.log
+.out
