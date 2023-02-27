@@ -69,3 +69,104 @@ k-NN 算法可以说是最简单的机器学习算法。构建模型只需要保
 \figures{Decision boundaries created by the nearest neighbors model}
 
 从左图可以看出，使用单一邻居绘制的决策边界紧跟着训练数据。随着邻居个数越来越多，决策边界也越来越平滑。更平滑的边界对应更简单的模型。换句话说，使用更少的邻居对应更高的模型复杂度（如\autoref{Trade-off of model complexity against training and test accuracy}右侧所示），而使用更多的邻居对应更低的模型复杂度（如\autoref{Trade-off of model complexity against training and test accuracy}左侧所示）。假如考虑极端情况，即邻居个数等于训练集中所有数据点的个数，那么每个测试点的邻居都完全相同（即所有训练点），所有预测结果也完全相同（即训练集中出现次数最多的类别）。
+
+我们来研究一下能否证实之前讨论过的模型复杂度和泛化能力之间的关系。先将数据集分成训练集和测试集，然后用不同的邻居个数对训练集和测试集的性能进行评估。输出结果见\autoref{Comparison of training and test accuracy}：
+
+\figures{Comparison of training and test accuracy}
+
+注意，由于更少的邻居对应更复杂的模型，所以做了水平翻转。仅考虑单一近邻时，训练集上的预测结果十分完美。但随着邻居个数的增多，模型变得更简单，训练集精度也随之下降。单一邻居时的测试集精度比使用更多邻居时要低，这表示单一近邻的模型过于复杂。与之相反，当考虑 10 个邻居时，模型又过于简单，性能甚至变得更差。最佳性能在中间的某处，邻居个数大约为 6。
+
+\paragraph{k近邻回归}
+
+k 近邻算法还可以用于回归。我们还是先从单一近邻开始，这次使用 wave 数据集。我们添加了 3 个测试数据点，在 x 轴上用绿色五角星表示。利用单一邻居的预测结果就是最近邻的目标值。在\autoref{Comparing predictions made by nearest neighbors regression}中用蓝色五角星表示。
+
+我们还可以用score方法来评估模型，对于回归问题，这一方法返回的是 $R^2$分数。$R^2$分数也叫作决定系数，是回归模型预测的优度度量，位于0到1之间。$R^2$等于1对应完美预测，$R^2$等于0对应常数模型，即总是预测训练集响应（\verb|y_train|）的平均值：
+
+
+\paragraph{分析KNeighborsRegressor}
+对于我们的一维数据集，可以查看所有特征取值对应的预测结果（图\autoref{Comparing predictions made by nearest neighbors regression}）。
+
+\figures{Comparing predictions made by nearest neighbors regression}
+
+从图中可以看出，仅使用单一邻居，训练集中的每个点都对预测结果有显著影响，预测结果的图像经过所有数据点。这导致预测结果非常不稳定。考虑更多的邻居之后，预测结果变得更加平滑，但对训练数据的拟合也不好。
+\paragraph{优点、缺点和参数}
+
+一般来说，KNeighbors 分类器有 2 个重要参数：邻居个数与数据点之间距离的度量方法。在实践中，使用较小的邻居个数（比如 3 个或 5 个）往往可以得到比较好的结果，但你应该调节这个参数。选择合适的距离度量方法超出了本书的范围。默认使用欧式距离，它在许多情况下的效果都很好。
+
+k-NN 的优点之一就是模型很容易理解，通常不需要过多调节就可以得到不错的性能。在考虑使用更高级的技术之前，尝试此算法是一种很好的基准方法。构建最近邻模型的速度通常很快，但如果训练集很大（特征数很多或者样本数很大），预测速度可能会比较慢。使用 k-NN 算法时，对数据进行预处理是很重要的（见第 3 章）。这一算法对于有很多特征（几百或更多）的数据集往往效果不好，对于大多数特征的大多数取值都为 0 的数据集（所谓的稀疏数据集）来说，这一算法的效果尤其不好。
+
+虽然 k 近邻算法很容易理解，但由于预测速度慢且不能处理具有很多特征的数据集，所以在实践中往往不会用到。
+
+\subsection{线性模型}
+线性模型利用输入特征的\textbf{线性函数}（linear function）进行预测
+
+\paragraph{用于回归的线性模型} 对于回归问题，线性模型预测的一般公式如下：
+\begin{equation*}
+    \hat{y} = w[0] * x[0] + w[1] * x[1] + \cdots + w[p] * x[p] + b
+\end{equation*}
+这里 $x[0]$ 到 $x[p]$ 表示单个数据点的特征（本例中特征个数为 $p+1$），$w$ 和 $b$ 是学习模型的
+参数，$\hat{y}$ 是模型的预测结果。对于单一特征的数据集，公式如下：
+\begin{equation*}
+    \hat{y} = w[0] * x[0] + b
+\end{equation*}
+
+对于有更多特征的数据集，w 包含沿每个特征坐标轴的斜率。或者，你也可以将预测的响应值看作输入特征的加权求和，权重由 w 的元素给出（可以取负值）。
+
+% \figures{Predictions of a linear model on the wave dataset}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\textwidth]{../Codes/Figures/Predictions of a linear model on the wave dataset.png}
+    \caption{Predictions of a linear model on the wave dataset}
+    \label{Predictions of a linear model on the wave dataset}
+\end{figure}
+
+用于回归的线性模型可以表示为这样的回归模型：对单一特征的预测结果是一条直线，两个特征时是一个平面，或者在更高维度（即更多特征）时是一个超平面。
+
+如果将直线的预测结果与\autoref{Predictions of a linear model on the wave dataset} 中 KNeighborsRegressor 的预测结果进行比较，你会发现直线的预测能力非常受限。似乎数据的所有细节都丢失了。从某种意义上来说，这种说法是正确的。假设目标 y 是特征的线性组合，这是一个非常强的（也有点不现实的）假设。但观察一维数据得出的观点有些片面。对于有多个特征的数据集而言，线性模型可以非常强大。特别地，如果特征数量大于训练数据点的数量，任何目标 y 都可以（在训练集上）用线性函数完美拟合。
+
+\paragraph{线性回归（又名普通最小二乘法）} 线性回归，或者\textbf{普通最小二乘法}（ordinary least squares，OLS），是回归问题最简单也最经典的线性方法。线性回归寻找参数 $w$ 和 $b$，使得对训练集的预测值与真实的回归目标值 $y$ 之间的均方误差最小。\textbf{均方误差}（\emph{mean squared error}）是预测值与真实值之差的平方和除以样本数。线性回归没有参数，这是一个优点，但也因此无法控制模型的复杂度。
+
+斜率”参数（w，也叫作权重或系数）被保存在 \verb|coef_| 属性中，而偏移或截距（b）被保存在 \verb|intercept_| 属性中：
+
+\begin{tcolorbox}
+    注意到了 \verb|coef_| 和 \verb|intercept_| 结尾处奇怪的下划线。scikit-learn总是将从训练数据中得出的值保存在以下划线结尾的属性中。这是为了将其与用户设置的参数区分开。
+\end{tcolorbox}
+
+\verb|intercept_| 属性是一个浮点数，而 \verb|coef_| 属性是一个 NumPy 数组，每个元素对应一个输入特征。由于 wave 数据集中只有一个输入特征，所以 \verb|lr.coef_| 中只有一个元素。
+
+我们来看一下训练集和测试集的性能：
+\begin{pyc}
+    print('Training set score: {:.2f}'.format(lr.score(X_train, y_train)))
+    print('Training set score: {:.2f}'.format(lr.score(X_test, y_test)))
+    # 'Training set score: 0.67'
+    # 'Training set score: 0.66'
+\end{pyc}
+$R^2$ 约为 0.66，这个结果不是很好，但我们可以看到，训练集和测试集上的分数非常接近。这说明可能存在欠拟合，而不是过拟合。对于这个一维数据集来说，过拟合的风险很小，因为模型非常简单（或受限）。然而，对于更高维的数据集（即有大量特征的数据集），线性模型将变得更加强大，过拟合的可能性也会变大。
+
+\begin{pyc}
+    print('Training set score: {:.2f}'.format(lr.score(X_train, y_train)))
+    print('Training set score: {:.2f}'.format(lr.score(X_test, y_test)))
+    # Training set score: 0.95
+    # Training set score: 0.61
+\end{pyc}
+训练集和测试集之间的性能差异是过拟合的明显标志，因此我们应该试图找到一个可以控制复杂度的模型。标准线性回归最常用的替代方法之一就是岭回归（ridge regression）
+
+\paragraph{岭回归} 在岭回归中，对系数（w）的选择不仅要在训练数据上得到好的预测结果，而且还要拟合附加约束。我们还希望系数尽量小。换句话说，w 的所有元素都应接近于 0。直观上来看，这意味着每个特征对输出的影响应尽可能小（即斜率很小），同时仍给出很好的预测结果。这种约束是所谓正则化（regularization）的一个例子。正则化是指对模型做显式约束，以避免过拟合。岭回归用到的这种被称为 L2 正则化。
+\begin{pyc}
+    from sklearn.linear_model import Ridge
+    ridge = Ridge().fit(X_train, y_train)
+    print('Training set score: {:.2f}'.format(ridge.score(X_train, y_train)))
+    print('Training set score: {:.2f}'.format(ridge.score(X_test, y_test)))
+    # Training set score: 0.89
+    # Training set score: 0.75
+\end{pyc}
+可以看出，Ridge 在训练集上的分数要低于 LinearRegression，但在测试集上的分数更高。这和我们的预期一致。线性回归对数据存在过拟合。Ridge 是一种约束更强的模型，所以更不容易过拟合。复杂度更小的模型意味着在训练集上的性能更差，但泛化性能更好。由于我们只对泛化性能感兴趣，所以应该选择 Ridge 模型而不是 LinearRegression 模型。
+
+Ridge 模型在模型的简单性（系数都接近于 0）与训练集性能之间做出权衡。简单性和训练集性能二者对于模型的重要程度可以由用户通过设置 alpha 参数来指定。alpha 的最佳设定值取决于用到的具体数据集。增大 alpha 会使得系数更加趋向于 0，从而降低训练集性能，但可能会提高泛化性能。
+
+减小 alpha 可以让系数受到的限制更小，即在\autoref{Trade-off of model complexity against training and test accuracy}中向右移动。对于非常小的 alpha 值，系数几乎没有受到限制，我们得到一个与 LinearRegression 类似的模型。
+
+\figures{Comparing coefficient magnitudes for ridge regression}
+
+我们还可以查看 alpha 取不同值时模型的 \verb|coef_| 属性，从而更加定性地理解 alpha 参数是如何改变模型的。更大的 alpha 表示约束更强的模型，所以我们预计大 alpha 对应的\verb|coef_|元素比小 alpha 对应的 \verb|coef_| 元素要小。这一点可以在\autoref{Comparing coefficient magnitudes for ridge regression}中得到证实：
