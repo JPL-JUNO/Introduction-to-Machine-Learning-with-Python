@@ -35,9 +35,37 @@
         名称     & 来源 & 特征量            & 用途      \\
         \hline
         forge  & 模拟 & $26\times 2$   & 二分类数据集  \\
-        wave   & 模拟 & 2              & 回归算法数据集 \\
-        cancer & 真实 & $569\times 30$ & 未指明     \\
-        boston & 真实 & $506\times 13$ & 未指明     \\
+        wave   & 模拟 & $40\times 1$   & 回归算法数据集 \\
+        cancer & 真实 & $569\times 30$ & 二分类数据集  \\
+        boston & 真实 & $506\times 13$ & 回归数据集   \\
         \hline
     \end{tabular}
 \end{table}
+
+\figures{Scatter plot of the forge dataset}
+
+\figures{Plot of the wave dataset}
+从特征较少的数据集（也叫低维数据集）中得出的结论可能并不适用于特征较多的数据集（也叫高维数据集）。只要你记住这一点，那么在低维数据集上研究算法也是很有启发的。
+
+\begin{tcolorbox}[breakable]
+    包含在 scikit-learn 中的数据集通常被保存为 Bunch 对象，里面包含真实数据以及一些数据集信息。关于 Bunch 对象，你只需要知道它与字典很相似，而且还有一个额外的好处，就是你可以用点操作符来访问对象的值（比如用 \verb|bunch.key| 来代替 \verb|bunch['key']|）。
+\end{tcolorbox}
+
+对于我们的目的而言，我们需要扩展boston数据集，输入特征不仅包括这 13 个测量结果，还包括这些特征之间的乘积（也叫\textbf{交互项}）。换句话说，我们不仅将犯罪率和公路可达性作为特征，还将犯罪率和公路可达性的乘积作为特征。像这样包含导出特征的方法叫作\textbf{特征工程}（feature engineering）。
+
+\subsection{k近邻}
+k-NN 算法可以说是最简单的机器学习算法。构建模型只需要保存训练数据集即可。想要对新数据点做出预测，算法会在训练数据集中找到最近的数据点，也就是它的“最近邻”。
+
+\paragraph{k近邻分类} k-NN 算法最简单的版本只考虑一个最近邻，也就是与我们想要预测的数据点最近的训练数据点。预测结果就是这个训练数据点的已知输出。\autoref{Predictions made by the one-nearest-neighbor model on the forge dataset}给出了这种分类方法在 forge 数据集上的应用。
+
+\figures{Predictions made by the one-nearest-neighbor model on the forge dataset}
+
+除了仅考虑最近邻，我还可以考虑任意个（k 个）邻居。这也是 k 近邻算法名字的来历。在考虑多于一个邻居的情况时，我们用“投票法”（voting）来指定标签。将出现次数更多的类别（也就是 k 个近邻中占多数的类别）作为预测结果。
+
+\figures{Predictions made by the three-nearest-neighbors model on the forge dataset}
+
+\paragraph{分析KNeighborsClassifier} 分别将 1 个、3 个和 9 个邻居三种情况的决策边界可视化，见\autoref{Decision boundaries created by the nearest neighbors model}。
+
+\figures{Decision boundaries created by the nearest neighbors model}
+
+从左图可以看出，使用单一邻居绘制的决策边界紧跟着训练数据。随着邻居个数越来越多，决策边界也越来越平滑。更平滑的边界对应更简单的模型。换句话说，使用更少的邻居对应更高的模型复杂度（如\autoref{Trade-off of model complexity against training and test accuracy}右侧所示），而使用更多的邻居对应更低的模型复杂度（如\autoref{Trade-off of model complexity against training and test accuracy}左侧所示）。假如考虑极端情况，即邻居个数等于训练集中所有数据点的个数，那么每个测试点的邻居都完全相同（即所有训练点），所有预测结果也完全相同（即训练集中出现次数最多的类别）。
