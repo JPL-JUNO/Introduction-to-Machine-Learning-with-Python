@@ -169,4 +169,89 @@ Ridge 模型在模型的简单性（系数都接近于 0）与训练集性能之
 
 \figures{Comparing coefficient magnitudes for ridge regression}
 
-我们还可以查看 alpha 取不同值时模型的 \verb|coef_| 属性，从而更加定性地理解 alpha 参数是如何改变模型的。更大的 alpha 表示约束更强的模型，所以我们预计大 alpha 对应的\verb|coef_|元素比小 alpha 对应的 \verb|coef_| 元素要小。这一点可以在\autoref{Comparing coefficient magnitudes for ridge regression}中得到证实：
+我们还可以查看 alpha 取不同值时模型的 \verb|coef_| 属性，从而更加定性地理解 alpha 参数是如何改变模型的。更大的 alpha 表示约束更强的模型，所以我们预计大 alpha 对应的\verb|coef_|元素比小 alpha 对应的 \verb|coef_| 元素要小。这一点可以在\autoref{Comparing coefficient magnitudes for ridge regression}中得到证实。
+
+还有一种方法可以用来理解正则化的影响，就是固定 alpha 值，但改变训练数据量。将模型性能作为数据集大小的函数进行绘图，这样的图像叫作\textbf{学习曲线}。
+
+正如所预计的那样，无论是岭回归还是线性回归，所有数据集大小对应的训练分数都要高于测试分数。由于岭回归是正则化的，因此它的训练分数要整体低于线性回归的训练分数。但岭回归的测试分数要更高，特别是对较小的子数据集。如果少于 400 个数据点，线性回归学不到任何内容。随着模型可用的数据越来越多，两个模型的性能都在提升，最终线性回归的性能追上了岭回归。这里要记住的是，\important{如果有足够多的训练数据，正则化变得不那么重要，并且岭回归和线性回归将具有相同的性能}。 \autoref{}中还有一个有趣之处，就是线性回归的训练性能在下降。\tips{如果添加更多数据，模型将更加难以过拟合或记住所有的数据}。
+
+\paragraph{lasso} 除了 Ridge，还有一种正则化的线性回归是 Lasso。与岭回归相同，使用 lasso 也是约束系数使其接近于 0，但用到的方法不同，叫作 L1 正则化。L1 正则化的结果是，使用 lasso 时某些系数刚好为 0。这说明某些特征被模型完全忽略。这可以看作是一种自动化的特征选择。某些系数刚好为 0，这样模型更容易解释，也可以呈现模型最重要的特征。
+
+如你所见，Lasso 在训练集与测试集上的表现都很差。这表示存在欠拟合，我们发现模型只用到了 105 个特征中的 4 个。与 Ridge 类似，Lasso 也有一个正则化参数 alpha，可以控制系数趋向于 0 的强度。为了降低欠拟合，我们尝试减小 alpha。这么做的同时，我们还需要增加 \verb|max_iter| 的值（运行迭代的最大次数）。
+
+alpha 值变小，我们可以拟合一个更复杂的模型，在训练集和测试集上的表现也更好。模型性能比使用 Ridge 时略好一点，而且我们只用到了 105 个特征中的 33 个。这样模型可能更容易理解。
+
+但如果把alpha设得太小，那么就会消除正则化的效果，并出现过拟合，得到LinearRegression 类似的结果：
+
+
+\figures{Comparing coefficient magnitudes for lasso regression}
+
+在实践中，在两个模型中一般首选岭回归。但如果特征很多，你认为只有其中几个是重要的，那么选择 Lasso 可能更好。同样，如果你想要一个容易解释的模型，Lasso 可以给出更容易理解的模型，因为它只选择了一部分输入特征。scikit-learn 还提供了 ElasticNet类，结合了 Lasso 和 Ridge 的惩罚项。在实践中，这种结合的效果最好，不过代价是要调节两个参数：一个用于 L1 正则化，一个用于 L2 正则化。
+
+\paragraph{} 首先来看二分类。这时可以利用下面的公式进行预测：
+\begin{equation*}
+    \hat{y} = w[0] * x[0] + w[1] * x[1] + \cdots + w[p] * x[p] + b > 0
+\end{equation*}
+这个公式看起来与线性回归的公式非常相似，但我们没有返回特征的加权求和，而是为预测设置了阈值（0）。
+
+对于用于回归的线性模型，输出 $\hat{y}$ 是特征的线性函数，是直线、平面或超平面（对于更高维的数据集）。对于用于分类的线性模型，\textbf{决策边界}是输入的线性函数。换句话说，（二元）线性分类器是利用直线、平面或超平面来分开两个类别的分类器。
+
+学习线性模型有很多种算法。这些算法的区别在于以下两点：
+\begin{itemize}
+    \item 系数和截距的特定组合对训练数据拟合好坏的度量方法；
+    \item 是否使用正则化，以及使用哪种正则化方法。
+\end{itemize}
+
+由于数学上的技术原因，不可能调节 w 和 b 使得算法产生的误分类数量最少。对于我们的目的，以及对于许多应用而言，上面第一点（称为损失函数）的选择并不重要。
+
+最常见的两种线性分类算法是 \textbf{Logistic回归}（logistic regression）和\textbf{线性支持向量机}（linear support vector machine，线性 SVM），
+
+\figures{Decision boundaries of a linear SVM and logistic regression}
+
+对于 LogisticRegression 和 LinearSVC， 决定正则化强度的权衡参数叫作C。\important{C值越大，对应的正则化越弱}。换句话说，如果参数 C 值较大，那么 LogisticRegression和LinearSVC 将尽可能将训练集拟合到最好，而如果 C 值较小，那么模型更强调使系数量（$bm{w}$）接近于 0。
+
+参数 C 的作用还有另一个有趣之处。\important{较小的 C 值可以让算法尽量适应“大多数”数据点，而较大的 C 值更强调每个数据点都分类正确的重要性}。
+
+\figures{Decision boundaries of a linear SVM for different values of C}
+
+在\autoref{Decision boundaries of a linear SVM for different values of C}中，左图，C 值很小，对应强正则化。大部分属于类别 0 的点都位于底部，大部分属于类别 1 的点都位于顶部。强正则化的模型会选择一条相对水平的线，有两个点分类错误。中间图，C 值稍大，模型更关注两个分类错误的样本，使决策边界的斜率变大。最后，右图，模型的 C 值非常大，使得决策边界的斜率也很大，现在模型对类别 0 中所有点的分类都是正确的。类别 1 中仍有一个点分类错误，这是因为对这个数据集来说，不可能用一条直线将所有点都分类正确。右侧图中的模型尽量使所有点的分类都正确，但可能无法掌握类别的整体分布。换句话说，这个模型很可能过拟合。
+
+与回归的情况类似，用于分类的线性模型在低维空间中看起来可能非常受限，决策边界只能是直线或平面。同样，在高维空间中，用于分类的线性模型变得非常强大，当考虑更多特征时，避免过拟合变得越来越重要。
+
+我们在乳腺癌数据集上详细分析 LogisticRegression：
+\begin{pyc}
+    # ConvergenceWarning
+    logreg = LogisticRegression().fit(X_train, y_train)
+    print('Training set score: {:.3f}'.format(logreg.score(X_train, y_train)))
+    print('Test set score: {:.3f}'.format(logreg.score(X_test, y_test)))
+    # Training set score: 0.946
+    # Test set score: 0.965
+\end{pyc}
+
+C=1 的默认值给出了相当好的性能，在训练集和测试集上都达到 95\% 的精度。但由于训练集和测试集的性能非常接近，所以模型很可能是欠拟合的。欠拟合的模型可以考虑增加C值来更好的拟合模型。
+
+\begin{pyc}
+    # ConvergenceWarning
+    logreg100 = LogisticRegression(C=100).fit(X_train, y_train)
+    print('Training set score: {:.3f}'.format(logreg100.score(X_train, y_train)))
+    print('Test set score: {:.3f}'.format(logreg100.score(X_test, y_test)))
+    # Training set score: 0.944
+    # Test set score: 0.958
+\end{pyc}
+
+我们还可以研究使用正则化更强的模型时会发生什么。设置 $C=0.01$：
+
+\begin{pyc}
+    # ConvergenceWarning
+    logreg001 = LogisticRegression(C=0.01).fit(X_train, y_train)
+    print('Training set score: {:.3f}'.format(logreg001.score(X_train, y_train)))
+    print('Test set score: {:.3f}'.format(logreg001.score(X_test, y_test)))
+    # Training set score: 0.934
+    # Test set score: 0.930
+\end{pyc}
+
+\figures{Coefficients learned by logistic regression for different C}
+
+\begin{tcolorbox}
+    第 3 个系数那里发现有趣之处，这个系数是“平均周长”（mean perimeter），它的回归系数在不同的正则参数中符号发生了改变。这也说明，对线性模型系数的解释应该始终持保留态度。
+\end{tcolorbox}
