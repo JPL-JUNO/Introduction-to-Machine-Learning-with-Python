@@ -2,9 +2,11 @@
     "cSpell.words": [
         "coef",
         "hlines",
+        "logreg",
         "matplotlib",
         "mglearn",
         "pyplot",
+        "xlim",
         "ylabel"
     ]
 }
