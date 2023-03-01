@@ -291,3 +291,15 @@ scikit-learn 中实现了三种朴素贝叶斯分类器：GaussianNB、Bernoulli
 决策树是广泛用于分类和回归任务的模型。本质上，它从一层层的 if/else 问题中进行学习，并得出结论。这一系列问题可以表示为一棵决策树，如图 2-22 所示。
 
 \href{https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_moons.html}{make\_moons}
+
+\paragraph{构造决策树}
+
+\paragraph{控制决策树的复杂度} 通常来说，构造决策树直到所有叶结点都是纯的叶结点，这会导致模型非常复杂，并且对训练数据高度过拟合。纯叶结点的存在说明这棵树在训练集上的精度是 100\%。训练集中的每个数据点都位于分类正确的叶结点中。
+
+防止过拟合有两种常见的策略：一种是及早停止树的生长，也叫预剪枝（pre-pruning）；另一种是先构造树，但随后删除或折叠信息量很少的结点，也叫后剪枝（post-pruning）或剪枝（pruning）。预剪枝的限制条件可能包括限制树的最大深度、限制叶结点的最大数目，或者规定一个结点中数据点的最小数目来防止继续划分。
+
+scikit-learn 的决策树在 DecisionTreeRegressor 类和 DecisionTreeClassifier 类中实现。scikit-learn 只实现了预剪枝，没有实现后剪枝。
+
+\paragraph{分析决策树}
+
+\paragraph{树的特征重要性}
