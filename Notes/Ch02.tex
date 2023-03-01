@@ -303,3 +303,24 @@ scikit-learn 的决策树在 DecisionTreeRegressor 类和 DecisionTreeClassifier
 \paragraph{分析决策树}
 
 \paragraph{树的特征重要性}
+
+回归树的用法和分析与分类树非常类似。但在将基于树的模型用于回归时，我们想要指出它的一个特殊性质。DecisionTreeRegressor（以及其他所有基于树的回归模型）不能外推（extrapolate），也不能在训练数据范围之外进行预测。
+
+\figures{The tree has no ability to generate new responses}
+
+一旦输入超出了模型训练数据的范围，模型就只能持续预测最后一个已知数据点。树不能在训练数据的范围之外生成“新的”响应。所有基于树的模型都有这个缺点\footnote{实际上，利用基于树的模型可以做出非常好的预测（比如试图预测价格会上涨还是下跌）。这个例子的目的并不是要说明对时间序列来说树是一个不好的模型，而是为了说明树在预测方式上的特殊性质。}。
+
+\paragraph{优点、缺点和参数} 控制决策树模型复杂度的参数是预剪枝参数，它在树完全展开之前停止树的构造。通常来说，选择一种预剪枝策略（设置 \verb|max_depth|、\verb|max_leaf_nodes| 或 \verb|min_samples_leaf|）足以防止过拟合。
+
+与前面讨论过的许多算法相比，决策树有两个优点：一是得到的模型\important{很容易可视化}，非专家也很容易理解（至少对于较小的树而言）；二是算法完全\important{不受数据缩放的影响}。由于每个特征被单独处理，而且数据的划分也不依赖于缩放，\tips{因此决策树算法不需要特征预处理，比如归一化或标准化。特别是特征的尺度完全不一样时或者二元特征和连续特征同时存在时，决策树的效果很好}。
+
+决策树的主要缺点在于，即使做了预剪枝，它也经常会过拟合，\important{泛化性能很差}。
+
+\subsection{决策树集成}
+集成（ensemble）是合并多个机器学习模型来构建更强大模型的方法。
+\paragraph{随机森林}
+\paragraph{构造随机森林}
+\paragraph{分析随机森林}
+\paragraph{优点、缺点和参数}
+\paragraph{梯度提升回归树（梯度提升机）}
+\paragraph{优点、缺点和参数}
