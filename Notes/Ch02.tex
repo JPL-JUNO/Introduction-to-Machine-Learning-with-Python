@@ -410,8 +410,37 @@ MLP 可以被视为广义的线性模型（GLM），执行多层处理后得到�
     \centering
     \begin{tabular}{cc}
         \includegraphics[page=1,width=.45\textwidth]{../Codes/Figures/Visualization of logistic regression.pdf} &
-        \includegraphics[page=1,width=.45\textwidth]{../Codes/Figures/A multilayer perceptron with two hidden layers.pdf} \\
+        \includegraphics[page=1,width=.45\textwidth]{../Codes/Figures/Illustration of a multilayer perceptron with a single hidden layer.pdf} \\
     \end{tabular}
-    \caption{}
-    \label{}
+    \caption{Illustration of a multilayer perceptron with a single hidden layer and linear model}
+    \label{Illustration of a multilayer perceptron with a single hidden layer}
 \end{figure}
+
+对于\autoref{Illustration of a multilayer perceptron with a single hidden layer}所示的小型神经网络，计算回归问题的 $\hat{y}$ 的完整公式如下（使用 tanh 非线性）：
+
+\begin{equation*}
+    \begin{split}
+        h[0]    & = tanh(w[0, 0] * x[0] + w[1, 0] * x[1] + w[2, 0] * x[2] + w[3, 0] * x[3] + b[0]) \\
+        h[1]    & = tanh(w[0, 0] * x[0] + w[1, 0] * x[1] + w[2, 0] * x[2] + w[3, 0] * x[3] + b[1]) \\
+        h[2]    & = tanh(w[0, 0] * x[0] + w[1, 0] * x[1] + w[2, 0] * x[2] + w[3, 0] * x[3] + b[2]) \\
+        \hat{y} & = v[0] * h[0] + v[1] * h[1] + v[2] * h[2] + b                                    \\
+    \end{split}
+\end{equation*}
+
+其中，$w$ 是输入 $x$ 与隐层 $h$ 之间的权重，$v$ 是隐层 $h$ 与输出 $\hat{y}$ 之间的权重。权重 $w$ 和 $v$ 要从数据中学习得到，$x$ 是输入特征，$\hat{y}$ 是计算得到的输出，$h$ 是计算的中间结果。需要用户设置的一个重要参数是隐层中的结点个数。对于非常小或非常简单的数据集，这个值可以小到 10；对于非常复杂的数据，这个值可以大到 10 000。也可以添加多个隐层，如图\autoref{A multilayer perceptron with two hidden layers}所示。
+
+\begin{figure}
+    \centering
+    \begin{tabular}{c}
+        \includegraphics[page=1, width=.5\textwidth]{../Codes/Figures/A multilayer perceptron with two hidden layers.pdf} \\
+    \end{tabular}
+    \caption{A multilayer perceptron with two hidden layers}
+    \label{A multilayer perceptron with two hidden layers}
+\end{figure}
+
+这些由许多计算层组成的大型神经网络，正是术语“深度学习”的灵感来源。
+
+\subsubsection{神经网络调参}
+将 MLPClassifier 应用到之前用过的 \verb|two_moons| 数据集上，以此研究 MLP 的工作原理。
+
+默认情况下，MLP 使用 100 个隐结点，这对于这个小型数据集来说已经相当多了。我们可以减少其数量（从而降低了模型复杂度），但仍然得到很好的结果（图 2-49）：
