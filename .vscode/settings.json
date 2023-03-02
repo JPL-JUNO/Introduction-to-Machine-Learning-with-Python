@@ -1,11 +1,13 @@
 {
     "cSpell.words": [
         "coef",
+        "gbrt",
         "hlines",
         "logreg",
         "matplotlib",
         "mglearn",
         "pyplot",
+        "semilogy",
         "xlim",
         "ylabel"
     ]

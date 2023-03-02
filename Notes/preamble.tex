@@ -6,6 +6,8 @@
 \usepackage{tcolorbox}
 \usepackage{epigraph}
 \usepackage{caption}
+\usepackage{subcaption}
+\usepackage{pdfpages}
 \usepackage{graphicx}
 \setkeys{Gin}{width=0.7\textwidth}
 \usepackage{listings}
@@ -59,7 +61,7 @@
 \setlist{noitemsep, topsep=0pt}
 
 \tcbuselibrary{minted, skins, breakable}
-\tcbset{breakable}
+\tcbset{breakable, colframe=black,colback=white, sharp corners=all}
 % \newtcblisting[auto counter, number within =chapter]{py}[1]{listing engine=minted,
 % 	minted style=colorful,
 % 	minted language=python,
