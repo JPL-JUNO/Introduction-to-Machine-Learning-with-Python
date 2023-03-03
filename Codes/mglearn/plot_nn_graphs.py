@@ -35,7 +35,7 @@ def plot_single_hidden_layer_graph():
     output = graphviz.Digraph(node_attr={'shape': 'circle'}, name="cluster_2")
 
     for i in range(4):
-        inputs.node("x[%d]" % i)
+        inputs.node("x[%d]" % i, labelloc='c')
 
     inputs.body.append('label = "inputs"')
     inputs.body.append('color = "white"')
@@ -44,7 +44,7 @@ def plot_single_hidden_layer_graph():
     hidden.body.append('color = "white"')
 
     for i in range(3):
-        hidden.node("h%d" % i, label="h[%d]" % i)
+        hidden.node("h%d" % i, label="h[%d]" % i, labelloc='c')
 
     output.node("y")
     output.body.append('label = "output"')
@@ -75,16 +75,16 @@ def plot_two_hidden_layer_graph():
     output = graphviz.Digraph(node_attr={'shape': 'circle'}, name="cluster_3")
 
     for i in range(4):
-        inputs.node("x[%d]" % i)
+        inputs.node("x[%d]" % i, labelloc='c')
 
     inputs.body.append('label = "inputs"')
     inputs.body.append('color = "white"')
 
     for i in range(3):
-        hidden.node("h1[%d]" % i)
+        hidden.node("h1[%d]" % i, labelloc='c')
 
     for i in range(3):
-        hidden2.node("h2[%d]" % i)
+        hidden2.node("h2[%d]" % i, labelloc='c')
 
     hidden.body.append('label = "hidden layer 1"')
     hidden.body.append('color = "white"')
