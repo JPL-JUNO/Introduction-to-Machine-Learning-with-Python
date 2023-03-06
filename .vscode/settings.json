@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "cmap",
         "coef",
         "gbrt",
         "hlines",
@@ -9,6 +10,7 @@
         "pyplot",
         "semilogy",
         "xlim",
-        "ylabel"
+        "ylabel",
+        "yticks"
     ]
 }
