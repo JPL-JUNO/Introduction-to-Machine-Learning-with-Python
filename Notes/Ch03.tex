@@ -273,5 +273,38 @@ DBSCAN 的原理是识别特征空间的“拥挤”区域中的点，在这些�
 \paragraph{用 DBSCAN 分析人脸数据集} 有趣的是，较大的簇从来没有超过一个。最多有一个较大的簇包含大多数点，还有一些较小的簇。这表示数据中没有两类或三类非常不同的人脸图像，而是所有图像或多或少地都与其他图像具有相同的相似度（或不相似度）。
 
 \paragraph{用 k 均值分析人脸数据集} 我们看到，利用 DBSCAN 无法创建多于一个较大的簇。凝聚聚类和 k 均值更可能创建均匀大小的簇，但我们需要设置簇的目标个数。我们可以将簇的数量设置为数据集中的已知人数(\tips{已知应该是62个不同的人的人脸})，虽然无监督聚类算法不太可能完全找到它们。相反，我们可以首先设置一个比较小的簇的数量
+
+\paragraph{用凝聚聚类分析人脸数据集}
 \subsection{聚类方法小结}
+聚类的应用与评估是一个非常定性的过程，通常在数据分析的探索阶段很有帮助。学习了三种聚类算法：k 均值、DBSCAN 和凝聚聚类。这三种算法都可以控制聚类的粒度（granularity）。k 均值和凝聚聚类允许你指定想要的簇的数量，而DBSCAN 允许你用 eps 参数定义接近程度，从而间接影响簇的大小。三种方法都可以用于大型的现实世界数据集，都相对容易理解，也都可以聚类成多个簇。
+
+每种算法的优点稍有不同。k 均值可以用簇的平均值来表示簇。它还可以被看作一种分解方法，每个数据点都由其簇中心表示。DBSCAN 可以检测到没有分配任何簇的“噪声点”，还可以帮助自动判断簇的数量。与其他两种方法不同，它允许簇具有复杂的形状，正如我们在 \verb|two_moons| 的例子中所看到的那样。DBSCAN 有时会生成大小差别很大的簇，这可能是它的优点，也可能是缺点。凝聚聚类可以提供数据的可能划分的整个层次结构，可以通过树状图轻松查看。
 \section{小结与展望}
+找到数据的正确表示对于监督学习和无监督学习的成功通常都至关重要，预处理和分解方法在数据准备中具有重要作用。
+
+分解、流形学习和聚类都是加深数据理解的重要工具，在没有监督信息的情况下，也是理解数据的仅有的方法。即使是在监督学习中，探索性工具对于更好地理解数据性质也很重要。通常来说，很难量化无监督算法的有用性，但这不应该妨碍你使用它们来深入理解数据。
+
+\begin{tcolorbox}[title=估计器接口小结]
+    scikit-learn 中的所有算法——无论是预处理、监督学习还是无监督学习算法——都被实现为类。这些类在 scikit-learn中叫作估计器（estimator）。估计器类包含算法，也保存了利用算法从数据中学到的模型。
+
+    为了应用算法，你首先需要将特定类的对象实例化，在构建模型对象时，你应该设置模型的所有参数。这些参数包括正则化、复杂度控制、要找到的簇的数量，等等。所有估计器都有 fit 方法，用于构建模型。fit 方法要求第一个参数总是数据 X，用一个 NumPy 数组或 SciPy 稀疏矩阵表示，其中每一行代表一个数据点。数据 X 总被假定为具有连续值（浮点数）的 NumPy 数组或 SciPy 稀疏矩阵。监督算法还需要有一个 y 参数，它是一维 NumPy 数组，包含回归或分类的目标值（即已知的输出标签或响应）。
+
+    在 scikit-learn 中，应用学到的模型主要有两种方法。要想创建一个新输出形式（比如 y）的预测，可以用 predict 方法。要想创建输入数据 X 的一种新表示，可以用 transform 方法。
+    \begin{table}[H]
+        \centering
+        \caption{scikit-learn API summary}
+        \label{scikit-learn API summary}
+        \begin{tabular}{ll}
+            \hline
+            \multicolumn{2}{c}{\texttt{estimator.fit(X\_train, [y\_train])}}      \\
+            \verb|estimator.predict(X_test)| & \verb|estimator.transform(X_test)| \\
+            \hline
+            Classification                   & Preprocessing                      \\
+            Regression                       & Dimensionality Reduction           \\
+            Clustering                       & Feature Extraction                 \\
+                                             & Feature Selection                  \\
+            \hline
+        \end{tabular}
+    \end{table}
+    此外，所有监督模型都有 \verb|score(X_test, y_test)| 方法，可以评估模型。
+\end{tcolorbox}
