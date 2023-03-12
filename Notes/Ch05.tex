@@ -219,11 +219,115 @@ cv 参数。
 错误的阳性预测叫作假正例（false positive, FP），错误的阴性预测）叫作假反例（false negative, FN）。在统计学中，假正例也叫作第一类错误（type I
 error），假反例也叫作第二类错误（type II error）。
 \subsubsection{不平衡数据集}
+如果在两个类别中，一个类别的出现次数比另一个多很多，那么错误类型将发挥重要作
+用。这种一个类别比另一个类别出现次
+数多很多的数据集，通常叫作\textbf{不平衡数据集}（imbalanced dataset）或者\textbf{具有不平衡类别的数据集}（dataset with imbalanced classes）。
+要想对这种不平衡数据的预测性能进行量化，精度并不是一种合适的度量。
 \subsubsection{混淆矩阵}
+
+精确率（precision）度量的是被预测为正例的样本中有多少是真正的正例:
+\begin{equation*}
+    Precision = \frac{TP}{TP+FP}
+\end{equation*}
+如果目标是限制假正例的数量，那么可以使用准确率作为性能指标。
+准确率也被称为阳性预测值（positive
+predictive value，PPV）。
+
+召回率（recall）度量的是正类样本中有多少被预测为正类：
+\begin{equation*}
+    Recall = \frac{TP}{TP+FN}
+\end{equation*}
+如果我们需要找出所有的正类样本，即避免假反例是很重要的情况下，那么可以使用召回
+率作为性能指标。召回率的其他名称有\textbf{灵敏度}（sensitivity）、\textbf{命中率}
+（hit rate）和真正例率（true positive rate，TPR）。
+
+虽然准确率和召回率是非常重要的度量，但是仅查看二者之一无法为你提供完整的图景。
+将两种度量进行汇总的一种方法是 f-分数（f-score）或 f-度量（f-measure），它是准确率与
+召回率的调和平均：
+\begin{equation*}
+    F = 2\frac{precision*recall}{precision + recall}
+\end{equation*}
+
+这一特定变体也被称为 f1-分数（$f_1-score$）。由于同时考虑了准确率和召回率，所以它对于
+不平衡的二分类数据集来说是一种比精度更好的度量。然而，\tips{f- 分数的一个缺点是比精度更加难以解释}。
+
+如果我们想要对准确率、召回率和 f1- 分数做一个更全面的总结，可以使用 \verb|classification_report| 这个很方便的函数，它可以同时计算这三个值，并以美观的格式打印出来
 \subsubsection{考虑不确定性}
-\subsubsection{准确率-召回率曲线}
+混淆矩阵和分类报告为一组特定的预测提供了非常详细的分析。但是，预测本身已经丢弃
+了模型中包含的大量信息。大多数分类器都提供了一
+个 \verb|decision_function| 或 \verb|predict_proba| 方法来评估预测的不确定度。预测可以被看作是以
+某个固定点作为 \verb|decision_function| 或 \verb|predict_proba| 输出的阈值——在二分类问题中，我
+们使用 0 作为决策函数的阈值，0.5 作为 \verb|predict_proba| 的阈值。
+
+由于 \verb|decision_function|的取值可能在任意范围，所以很难提供关于如何选取阈值的经验法则。
+
+\begin{tcolorbox}
+    如果你设置了阈值，那么要小心不要在测试集上这么做。与其他任何参数一
+    样，在测试集上设置决策阈值可能会得到过于乐观的结果。可以使用验证集
+    或交叉验证来代替。
+\end{tcolorbox}
+
+对于实现了 \verb|predict_proba| 方法的模型来说，选择阈值可能更简单，因为 \verb|predict_proba| 的输
+出固定在 0 到 1 的范围内，表示的是概率。默认情况下，0.5 的阈值表示，如果模型以超过
+50\% 的概率“确信”一个点属于正类，那么就将其划为正类。增大这个阈值意味着模型需要
+更加确信才能做出正类的判断（较低程度的确信就可以做出反类的判断）。虽然使用概率可
+能比使用任意阈值更加直观，但并非所有模型都提供了不确定性的实际模型（一棵生长到最
+大深度的 DecisionTree 总是 100\% 确信其判断，即使很可能是错的）。这与校准（calibration）
+的概念相关：校准模型是指能够为其不确定性提供精确度量的模型。你可以在 Alexandru Niculescu-Mizil 和 Rich Caruana 的“\href{http://lkm.fri.uni-lj.si/xaigor/eng/scipaper/niculescumizilcaruana05-icml.pdf}{Predicting Good Probabilities with Supervised Learning}”这篇文章中找到更多内容。
+\subsubsection{精确率-召回率曲线}
+旦设定了一个具体目标（比如对某一
+类别的特定召回率或精确率），就可以适当地设定一个阈值。总是可以设置一个阈值来满
+足特定的目标，比如 90\% 的召回率。难点在于开发一个模型，在满足这个阈值的同时仍具
+有合理的精确率——如果你将所有样本都划为正类，那么将会得到 100\% 的召回率，但你
+的模型毫无用处。
+
+对分类器设置要求（比如 90\% 的召回率）通常被称为设置工作点（operating point）。在业
+务中固定工作点通常有助于为客户或组织内的其他小组提供性能保证。
+
+在开发新模型时，通常并不完全清楚工作点在哪里。因此，为了更好地理解建模问题，很
+有启发性的做法是，同时查看所有可能的阈值或精确率和召回率的所有可能折中。利用
+一种叫作精确率 - 召回率曲线（precision-recall curve）的工具可以做到这一点。
+
+曲线越靠近右上角，则分类器越好。右上角的点表示对于同一个阈值，准确率和召回率都
+很高。曲线从左上角开始，这里对应于非常低的阈值，将所有样本都划为正类。提高阈值
+可以让曲线向准确率更高的方向移动，但同时召回率降低。\important{继续增大阈值，大多数被划为
+    正类的点都是真正例，此时准确率很高，但召回率更低}。随着准确率的升高，模型越能够
+保持较高的召回率，则模型越好。
+
+\autoref{Comparing precision recall curves of SVM and random forest} 可以看出，随机森林在极值处（要求很高的召回率或很高的准确率）的表
+现更好。在中间位置（精确率约为 0.7）SVM 的表现更好。如果我们只查看 f1-分数来比较
+二者的总体性能，那么可能会遗漏这些细节。f1-分数只反映了精确率-召回率曲线上的一
+个点，即默认阈值对应的那个点。
+
+\figures{Comparing precision recall curves of SVM and random forest}
 \subsubsection{受试者工作特征（ROC）与AUC}
+
+还有一种常用的工具可以分析不同阈值的分类器行为：\textbf{受试者工作特征曲线}（receiver
+operating characteristics curve），简称为 ROC 曲线（ROC curve）。与准确率 - 召回率曲
+线类似，ROC 曲线考虑了给定分类器的所有可能的阈值，但它显示的是假正例率（false
+positive rate，FPR）和真正例率（true positive rate，TPR），而不是报告准确率和召回率。
+回想一下，真正例率只是召回率的另一个名称，而假正例率（衰退率, fall out）则是假正例占所有反类样本的
+比例：
+\begin{equation*}
+    FPR=\frac{FP}{FP+TN}
+\end{equation*}
+最接近左上角的点可能是比默认选择更好的工作点。同样请注
+意，不应该在测试集上选择阈值，而是应该在单独的验证集上选择。
+
+与准确率 - 召回率曲线一样，我们通常希望使用一个数字来总结 ROC 曲线，即曲线下的
+面积［通常被称为 AUC（area under the curve），这里的曲线指的就是 ROC 曲线］。
+
+对于不平衡的分类问题来说，AUC 是一个比精度好得多的指标。AUC 可以
+被解释为评估正例样本的排名（ranking）。它等价于从正类样本中随机挑选一个点，由分
+类器给出的分数比从反类样本中随机挑选一个点的分数更高的概率。
+
+强烈建议在不平衡数据上评估模型时使用 AUC。但请记住，AUC 没有使用默
+认阈值，因此，为了从高 AUC 的模型中得到有用的分类结果，可能还需要调节决策阈值。
 \subsection{多分类指标}
+多
+分类问题的所有指标基本上都来自于二分类指标，但是要对所有类别进行平均。多分类的
+精度被定义为正确分类的样本所占的比例。同样，如果类别是不平衡的，精度并不是很
+好的评估度量。
 \subsection{回归指标}
 \subsection{在模型选择中使用评估指标}
 \section{小结}
