@@ -1,0 +1,134 @@
+\chapter{算法链与管道}
+大多数机器学习应用不仅需要应用单个算法，而且还需要将许多不同的处理步
+骤和机器学习模型链接在一起。本章将介绍如何使用 Pipeline 类\marginpar{Pipeline}来简化构建变换和模型链
+的过程。我们将重点介绍如何将 Pipeline 和 GridSearchCV 结合起来，从而同时搜索所有
+处理步骤中的参数。
+\section{用预处理进行参数选择}
+\begin{pyc}
+    param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100],
+    'gamma': [0.001, 0.01, 0.1, 1, 10, 100]}
+    grid = GridSearchCV(SVC(), param_grid=param_grid, cv=5)
+    grid.fit(X_train_scaled, y_train)
+    print('Best cross-validation accuracy: {:.2f}'.format(grid.best_score_))
+    print('Best set score: {:.2f}'.format(grid.score(X_test_scaled, y_test)))
+    print('Best parameter:', grid.best_params_)
+\end{pyc}
+
+上面的代码中有一个不易察觉的陷阱。在缩放数据时，我们使用了训练集中的所有数据来找到训练的方法。然后，我
+们使用缩放后的训练数据来运行带交叉验证的网格搜索。对于交叉验证中的每次划分，原
+始训练集的一部分被划分为训练部分，另一部分被划分为测试部分。测试部分用于度量在
+训练部分上所训练的模型在新数据上的表现。但是，我们在缩放数据时已经使用过测试部
+分中所包含的信息。请记住，交叉验证每次划分的测试部分都是训练集的一部分，我们使
+用整个训练集的信息来找到数据的正确缩放。
+\figures{Data usage when preprocessing outside the cross-validation loop}
+
+为了解决这个问题，在交叉验证的过程中，应该在进行任何预处理之前完成数据集的划
+分。任何从数据集中提取信息的处理过程都应该仅应用于数据集的训练部分，因此，任何
+交叉验证都应该位于处理过程的“最外层循环”。
+
+在 scikit-learn 中，要想使用 \verb|cross_val_score| 函数和 GridSearchCV 函数实现这一点，可
+以使用 Pipeline 类。Pipeline 类可以将多个处理步骤合并（glue）为单个 scikit-learn 估
+计器。Pipeline 类本身具有 fit、predict 和 score 方法，其行为与 scikit-learn 中的其
+他模型相同。
+\section{构建管道}
+构建一个由步骤列表组成的管道对象。
+每个步骤都是一个元组，其中包含一个名称（你选定的任意字符串， 但不应该以双下划线开头）和一个估计器的实例。
+
+\section{在网格搜索中使用管道}
+在网格搜索中使用管道的工作原理与使用任何其他估计器都相同。我们定义一个需要搜索
+的参数网格，并利用管道和参数网格构建一个 GridSearchCV。不过在指定参数网格时存在
+一处细微的变化。我们需要为每个参数指定它在管道中所属的步骤。为管
+道定义参数网格的语法是为每个参数指定步骤名称，后面加上 \verb|__|（双下划线），然后是参
+数名称。比如，要想搜索 SVC 的 C 参数，必须使用 "\verb|svm__C|" 作为参数网格字典的键。
+
+在交叉验证中，信息泄露的影响大小取决于预处理步骤的性质。使用测试部分来估计数据
+的范围，通常不会产生可怕的影响，但在特征提取和特征选择中使用测试部分，则会导致
+结果的显著差异。
+
+\begin{tcolorbox}[title=举例说明信息泄露]
+    在 Hastie、Tibshirani 与 Friedman 合著的\href{https://www.statlearning.com/}{An Introduction to Statistical Learning}，中译版《统计学习导论》一书中给出了交叉验证中信
+    息泄露的一个很好的例子，这里我们复制了一个修改版本。我们考虑一个假想的回归
+    任务，包含从高斯分布中独立采样的 100 个样本与 10 000 个特征。我们还从高斯分布
+    中对响应进行采样：
+
+    \begin{pyc}
+        rng = np.random.RandomState(seed=0)
+        X = rng.normal(size=(100, 10_000))
+        y = rng.normal(size=(100,))
+    \end{pyc}
+
+    考虑到我们创建数据集的方式，数据 X 与目标 y 之间没有任何关系（它们是独立的），
+    所以应该不可能从这个数据集中学到任何内容。现在我们将完成下列工作。首先利用
+    SelectPercentile 特征选择从 10 000 个特征中选择信息量最大的特征，然后使用交叉
+    验证对 Ridge 回归进行评估：
+    \begin{pyc}
+        select = SelectPercentile(score_func=f_regression, percentile=5).fit(X, y)
+        X_selected = select.transform(X)
+        print('X_selected.shape: {}'.format(X_selected.shape))
+        print('Cross-validation accuracy (cv only on ridge): {:.2f}'.format(
+        np.mean(cross_val_score(Ridge(), X_selected, y, cv=5))
+        ))
+    \end{pyc}
+    交叉验证计算得到的平均 $R^2$ 为 0.91，表示这是一个非常好的模型。这显然是不对的，
+    因为我们的数据是完全随机的。这里的特征选择从 10 000 个随机特征中（碰巧）选出
+    了与目标相关性非常好的一些特征。由于我们在交叉验证之外对特征选择进行拟合，
+    所以它能够找到在训练部分和测试部分都相关的特征。从测试部分泄露出去的信息包
+    含的信息量非常大，导致得到非常不切实际的结果。我们将这个结果与正确的交叉验
+    证（使用管道）进行对比：
+
+
+    \begin{pyc}
+        pipe = Pipeline([
+                ('select', SelectPercentile(score_func=f_regression, percentile=5)),
+                ('ridge', Ridge())
+            ])
+        print('Cross-validation accuracy (pipeline): {:.2f}'.format(
+        np.mean(cross_val_score(pipe, X, y, cv=5))
+        ))
+    \end{pyc}
+    这一次我们得到了负的 $R^2$ 分数，表示模型很差。利用管道，特征选择现在位于交叉验
+    证循环内部。也就是说，仅使用数据的训练部分来选择特征，而不使用测试部分。特
+    征选择找到的特征在训练集中与目标相关，但由于数据是完全随机的，这些特征在测
+    试集中并不与目标相关。在这个例子中，修正特征选择中的数据泄露问题，结论也由
+    “模型表现很好”变为“模型根本没有效果”。
+\end{tcolorbox}
+\section{通用的管道接口}
+Pipeline 类不但可用于预处理和分类，实际上还可以将任意数量的估计器连接在一起。对于管道中估计器的唯一要求就是，除了最后一步之外的所有步骤都需要具有 transform
+方法，这样它们可以生成新的数据表示，以供下一个步骤使用。
+
+在调用 Pipeline.fit 的过程中，管道内部依次对每个步骤调用 fit 和 transform，其输入
+是前一个步骤中 transform 方法的输出。对于管道中的最后一步，则仅调用 fit。
+
+请记住，pipeline.steps 是由元组组成的列表，所以 \verb|pipeline.steps[0][1]| 是第一个估计器，\verb|pipeline.steps[1][1]| 是第二个估计器，以
+此类推。
+
+管道的最后一步不需要具有 predict 函数，比如说，我们可
+以创建一个只包含一个缩放器和一个 PCA 的管道。由于最后一步（PCA）具有 transform 方
+法，所以我们可以对管道调用 transform，以得到将 PCA.transform 应用于前一个步骤处理
+过的数据后得到的输出。管道的最后一步只需要具有 fit 方法。
+\subsection{用make\_pipeline方便地创建管道}
+使用PipeLine创建管道有时有点麻烦，我们通常不需要为每一个步骤提供用户指定的名
+称。有一个很方便的函数 \verb|make_pipeline|，可以为我们创建管道并根据每个步骤所属的类
+为其自动命名，可以通过查看 steps 属性来查看步骤的名称。一般来说，步骤名称只是类名称的小写版本。
+如果多个步骤属于同一个类，则会附加一个数字。
+\subsection{访问步骤属性}
+通常来说，你希望检查管道中某一步骤的属性——比如线性模型的系数或 PCA 提取的成
+分。要想访问管道中的步骤，最简单的方法是通过 \verb|named_steps| 属性，它是一个字典，将
+步骤名称映射为估计器。
+\subsection{访问网格搜索管道中的属性}
+\section{网格搜索预处理步骤与模型参数}
+\section{网格搜索选择使用哪个模型}
+你甚至可以进一步将 GridSearchCV 和 Pipeline 结合起来：还可以搜索管道中正在执行的
+实际步骤（比如用 StandardScaler 还是用 MinMaxScaler）。这样会导致更大的搜索空间，
+应该予以仔细考虑。尝试所有可能的解决方案，通常并不是一种可行的机器学习策略。
+\section{小结}
+本章介绍了 Pipeline 类，这是一种通用工具，可以将机器学习工作流程中的多个处理步
+骤链接在一起。现实世界中的机器学习应用很少仅涉及模型的单独使用，而是需要一系列
+处理步骤。使用管道可以将多个步骤封装为单个 Python 对象，这个对象具有我们熟悉的
+scikit-learn 接口 fit、predict 和 transform。特别是使用交叉验证进行模型评估与使用
+网格搜索进行参数选择时，使用 Pipeline 类来包括所有处理步骤对正确的评估至关重要。
+利用 Pipeline 类还可以让代码更加简洁，并减少不用 pipeline 类构建处理链时可能会犯
+的错误（比如忘记将所有变换器应用于测试集，或者应用顺序错误）的可能性。选择特征
+提取、预处理和模型的正确组合，这在某种程度上是一门艺术，通常需要一些试错。但是
+有了管道，这种“尝试”多个不同的处理步骤是非常简单的。在进行试验时，要小心不要
+将处理过程复杂化，并且一定要评估一下模型中的每个组件是否必要。
