@@ -34,3 +34,6 @@ Notes/main.fdb_latexmk
 Notes/main.fls
 Notes/Ch05.aux
 Notes/Ch06.aux
+Codes/Data/train
+Codes/Data/test
+Notes/Ch07.aux
