@@ -45,6 +45,8 @@
 些术语来自于信息检索（information retrieval，IR）和自然语言处理（natural language
 processing，NLP）的社区，它们主要针对文本数据。
 \section{示例应用：电影评论的情感分析}
+作为本章的一个运行示例，我们将使用由斯坦福研究员 Andrew Maas 收集的 \href{http://ai.stanford.edu/~amaas/data/sentiment/}{IMDb}
+（Internet Movie Database，互联网电影数据库）网站的电影评论数据集。
 \section{将文本数据表示为词袋}
 用于机器学习的文本表示有一种最简单的方法，也是最有效且最常用的方法，就是使用词
 袋（bag-of-words）表示。使用这种表示方式时，我们舍弃了输入文本中的大部分结构，如
@@ -61,7 +63,19 @@ processing，NLP）的社区，它们主要针对文本数据。
 \subsection{将词袋应用于测试数据集}
 词袋表示是在 CountVectorizer 中实现的，它是一个变换器（transformer）。
 \subsection{将词袋应用于电影评论}
+
+\begin{tcolorbox}
+    如果一个文档中包含训练数据中没有包含的单词，并对其调用 CountVectorizer
+    的 transform 方法，那么这些单词将被忽略，因为它们没有包含在字典中。
+    这对分类来说不是一个问题，因为从不在训练数据中的单词中学不到任何内
+    容。但对于某些应用而言（比如垃圾邮件检测），添加一个特征来表示特定文
+    档中有多少个所谓“词表外”单词可能会有所帮助。为了实现这一点，你需
+    要设置 \verb|min_df|，否则这个特征在训练期间永远不会被用到。
+\end{tcolorbox}
 \section{停用词}
+删除没有信息量的单词还有另一种方法，就是舍弃那些出现次数太多以至于没有信息量的单
+词。有两种主要方法：使用特定语言的停用词（stopword）列表，或者舍弃那些出现过于频
+繁的单词。scikit-learn 的 feature_extraction.text 模块中提供了英语停用词的内置列表
 \section{用tf-idf缩放数据}
 \section{研究模型系数}
 \section{多个单词的词袋（n元分词）}
