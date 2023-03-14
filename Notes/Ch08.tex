@@ -1,0 +1,73 @@
+\chapter{总结}
+\section{处理机器学习问题}
+\section{从原型到生产}
+论你能否在生产系统中使用 scikit-learn，重要的是要记住，生产系统的要求与一次性
+的分析脚本不同。如果将一个算法部署到更大的系统中，那么会涉及软件工程方面的很
+多内容，比如可靠性、可预测性、运行时间和内存需求。对于在这些领域表现良好的机器
+学习系统来说，简单就是关键。请仔细检查数据处理和预测流程中的每一部分，并问你
+自己这些问题：每个步骤增加了多少复杂度？每个组件对数据或计算基础架构的变化的
+鲁棒性有多高？每个组件的优点能否使其复杂度变得合理？如果你正在构建复杂的机器
+学习系统，我们强烈推荐阅读 Google 机器学习团队的研究者发布的这篇论文：“\href{http://research.google.com/pubs/pub43146.html}{Machine Learning: The High Interest Credit Card of Technical Debt}”
+\section{测试生产系统}
+我们介绍了如何基于事先收集的测试集来评估算法的预测结果。这被称为离
+线评估（offline evaluation）。但如果你的机器学习系统是面向用户的，那么这只是评估算
+法的第一步。下一步通常是在线测试（online testing）或实时测试（live testing），对在整个
+系统中使用算法的结果进行评估。改变网站向用户呈现的推荐结果或搜索结果，可能会极
+大地改变用户行为，并导致意想不到的结果。为了防止出现这种意外，大部分面向用户的
+服务都会采用 A/B 测试（A/B testing），这是一种盲的（blind）用户研究形式。在 A/B 测
+试中，在用户不知情的情况下，为选中的一部分用户提供使用算法 A 的网站或服务，而为
+其余用户提供算法 B。对于两组用户，在一段时间内记录相关的成功指标。然后对算法 A
+和算法 B 的指标进行对比，并根据这些指标在两种方法中做出选择。使用 A/B 测试让我
+们能够在实际情况下评估算法，这可能有助于我们发现用户与模型交互时的意外后果。通
+常情况下，A 是一个新模型，而 B 是已建立的系统。在线测试中还有比 A/B 测试更为复杂
+的机制，比如 bandit 算法。John Myles White 的 \href{http://shop.oreilly.com/product/0636920027393.do}{Bandit Algorithms for Website Optimization}。
+
+\section{构建你自己的估计器}
+scikit-learn 中实现的大量工具和算法，可用于各种类型的任务。但是，你通常
+需要对数据做一些特殊处理，这些处理方法没有在 scikit-learn 中实现。在将数据传入
+scikit-learn 模型或管道之前，只做数据预处理可能也足够了。但如果你的预处理依赖于
+数据，而且你还想使用网格搜索或交叉验证，那么事情就变得有点复杂了。
+我们在第 6 章中讨论过将所有依赖于数据的处理过程放在交叉验证循环中的重要性。那
+么如何同时使用你自己的处理过程与 scikit-learn 工具？有一种简单的解决方案：构建
+你自己的估计器！实现一个与 scikit-learn 接口兼容的估计器是非常简单的，从而可以
+与 Pipeline、GridSearchCV 和 \verb|cross_val_score| 一 起 使 用。 你 可 以 在 scikit-learn 文档中找到详细说明，但下面是其要点。实现一个变换器类的最简单的方法，就是从 BaseEstimator 和
+TransformerMixin 继承，然后实现 \verb|__init__|、\verb|fit| 和 \verb|predict| 函数。
+
+\section{下一步怎么走}
+\subsection{理论}
+\begin{itemize}
+    \item Hastie、Tibshirani 和 Friedman 合著的统计学习导论
+    \item Stephen Marsland 的 Machine Learning: An Algorithmic Perspective
+    \item Christopher Bishop 的 Pattern Recognition and Machine Learning
+    \item Kevin Murphy 的 Machine Learning: A Probabilistic Perspective
+\end{itemize}
+\subsection{排序、推荐系统与其他学习类型}
+重点介绍最常见的机器学习任务：监督学习中的分类与回
+归，无监督学习中的聚类和信号分解。还有许多类型的机器学习，都有很多重要的应用。
+有两个特别重要的主题没有包含在本书中。第一个是排序问题（ranking），对于特定查询，
+我们希望检索出按相关性排序的答案。你今天可能已经使用过排序系统，它是搜索引擎的
+运行原理。你输入搜索查询并获取答案的有序列表，它们按相关性进行排序。Manning、
+Raghavan 和 Schuütze 合著的 Introduction to Information Retrieval 一书给出了对排序问题的
+很好介绍。第二个主题是推荐系统（recommender system），就是根据用户偏好向他们提供
+建议。你可能已经在“您可能认识的人”“购买此商品的顾客还购买了”或“您的最佳选
+择”等标题下遇到过推荐系统。另一种常见的应用是时间序列预测（比如股票价格），这方面也
+有大量的文献。还有许多类型的机器学习任务，比我们这里列出的要多得多，我们建议你
+从书籍、研究论文和在线社区中获取信息，以找到最适合你实际情况的范式。
+\subsection{推广到更大的数据集}
+如果你需要处理 TB 级别的数据，或者需要节省处
+理大量数据的费用，那么有两种基本策略：核外学习（out-of-core learning）与集群上的并
+行化（parallelization over a cluster）。
+
+核外学习是指从无法保存到主存储器的数据中进行学习，但在单台计算机上（甚至是一
+台计算机的单个处理器）进行学习。数据从硬盘或网络等来源进行读取，一次读取一个
+样本或者多个样本组成的数据块，这样每个数据块都可以读入 RAM。然后处理这个数
+据子集并更新模型，以体现从数据中学到的内容。然后舍弃该数据块，并读取下一块数
+据。
+
+另一种扩展策略是将数据分配给计算机集群中的多台计算机，让每台计算机处理部分数
+据。对于某些模型来说这种方法要快得多，而可以处理的数据大小仅受限于集群大小。
+但是，这种计算通常需要相对复杂的基础架构。目前最常用的分布式计算平台之一是在
+Hadoop 之上构建的 spark 平台。spark 在 MLLib 包中包含一些机器学习功能。如果你的数
+据已经位于 Hadoop 文件系统中，或者你已经使用 spark 来预处理数据，那么这可能是最
+简单的选项。但如果你还没有这样的基础架构，建立并集成一个 spark 集群可能花费过大。
+前面提到的 vw 包提供了一些分布式功能，在这种情况下可能是更好的解决方案。
